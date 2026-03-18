@@ -1,27 +1,43 @@
-const OpCode = enum { OP_RETURN };
+const std = @import("std");
 
-const Chunk = struct {
-    count: u32 = 0,
-    capacity: u32 = 0,
-    code: []u8, // still not understanding how to allocate data but will revisit here
+pub const OpCode = enum(u8) {
+    OP_RETURN,
+};
 
-    pub fn init(code: []u8) Chunk {
-        return Chunk{
-            .code = code,
-        };
+pub const Chunk = struct {
+    count: u8,
+    capacity: u8,
+    code: []u8,
+    allocator: std.mem.Allocator,
+
+    pub fn init(allocator: std.mem.Allocator, count: u8, capacity: u8) !Chunk {
+        return .{ .allocator = allocator, .count = count, .capacity = capacity, .code = try allocator.alloc(u8, capacity) };
+    }
+    fn growCapacity(self: *Chunk) void {
+        if (self.capacity < 8) {
+            self.capacity = 8;
+        } else {
+            self.capacity *= 2;
+        }
+    }
+    fn growArray(self: *Chunk) !void {
+        self.code = try self.allocator.realloc(self.code, self.capacity);
     }
 
-    pub fn writeChunk(self: Chunk, byte: u8) void {
-        if (.capcity < .count + 1) {
-            const oldCapacity: u32 = self.capacity;
-            self.capacity = .growCapacity(oldCapacity);
-            self.code = .growArray();
+    pub fn writeChunk(self: *Chunk, byte: u8) !void {
+        // check if we maximized capacity if yes then grow the capacity
+        std.debug.print("capacity: {}, count: {}\n", .{ self.capacity, self.count });
+        if (self.capacity < self.count + 1) {
+            std.debug.print("here\n", .{});
+            self.growCapacity();
+            try self.growArray();
         }
         self.code[self.count] = byte;
         self.count += 1;
     }
 
-    fn growCapacity(capacity: u32) u32 {
-        return capacity;
+    pub fn deinit(self: *Chunk) void {
+        const allocator = self.allocator;
+        allocator.free(self.code);
     }
 };
