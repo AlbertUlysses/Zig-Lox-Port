@@ -14,6 +14,6 @@ pub fn main() !void {
     var new_chunk = try chunk.Chunk.init(ally, 0, 4);
     defer new_chunk.deinit();
     try new_chunk.writeChunk(@intFromEnum(chunk.OpCode.OP_RETURN));
-    lox_debug.dissamebleChunk(&new_chunk, "test chunk");
+    lox_debug.disassembleChunk(&new_chunk, "test chunk");
     //std.debug.print("Bytes: {} \n", .{new_chunk.code[0]});
 }
