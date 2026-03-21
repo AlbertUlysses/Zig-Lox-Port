@@ -13,6 +13,9 @@ pub fn main() !void {
     //defer std.prcoess.argsFree(ally, args);
     var new_chunk = try chunk.Chunk.init(ally, 0, 4);
     defer new_chunk.deinit();
+    const constant: u32 = try new_chunk.addConstant(1.2);
+    try new_chunk.writeChunk(@intFromEnum(chunk.OpCode.OP_CONSTANT));
+    try new_chunk.writeChunk(constant);
     try new_chunk.writeChunk(@intFromEnum(chunk.OpCode.OP_RETURN));
     lox_debug.disassembleChunk(&new_chunk, "test chunk");
     //std.debug.print("Bytes: {} \n", .{new_chunk.code[0]});

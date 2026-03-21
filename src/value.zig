@@ -1,7 +1,10 @@
 const std = @import("std");
 
-const Value = f64;
+pub const Value = f64;
 
+pub fn printValue(value: Value) void {
+    std.debug.print("{e}", .{value});
+}
 pub const ValueArray = struct {
     capacity: u8,
     count: u8,
