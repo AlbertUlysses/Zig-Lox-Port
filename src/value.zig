@@ -28,7 +28,6 @@ pub const ValueArray = struct {
 
     pub fn writeValue(self: *ValueArray, value: Value) !void {
         if (self.capacity < self.count + 1) {
-            std.debug.print("here\n", .{});
             self.growCapacity();
             try self.growArray();
         }
