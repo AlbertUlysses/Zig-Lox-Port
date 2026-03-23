@@ -10,7 +10,7 @@ pub fn main() !void {
 
     var new_chunk = try chunk.Chunk.init(ally, 0, 4);
     defer new_chunk.deinit();
-    const constant: u32 = try new_chunk.addConstant(1.2);
+    const constant: u8 = try new_chunk.addConstant(1.2);
     try new_chunk.writeChunk(@intFromEnum(chunk.OpCode.OP_CONSTANT), 123);
     try new_chunk.writeChunk(constant, 123);
     try new_chunk.writeChunk(@intFromEnum(chunk.OpCode.OP_RETURN), 123);

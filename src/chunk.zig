@@ -9,13 +9,13 @@ pub const OpCode = enum(u8) {
 pub const Chunk = struct {
     count: u8,
     capacity: u8,
-    code: []u32,
+    code: []u8,
     lines: []u32,
     constants: value.ValueArray,
     allocator: std.mem.Allocator,
 
     pub fn init(allocator: std.mem.Allocator, count: u8, capacity: u8) !Chunk {
-        return .{ .allocator = allocator, .count = count, .capacity = capacity, .code = try allocator.alloc(u32, capacity), .lines = try allocator.alloc(u32, capacity), .constants = try value.ValueArray.init(allocator, count, capacity) };
+        return .{ .allocator = allocator, .count = count, .capacity = capacity, .code = try allocator.alloc(u8, capacity), .lines = try allocator.alloc(u32, capacity), .constants = try value.ValueArray.init(allocator, count, capacity) };
     }
     fn growCapacity(self: *Chunk) void {
         if (self.capacity < 8) {
@@ -26,10 +26,10 @@ pub const Chunk = struct {
     }
     fn growArray(self: *Chunk) !void {
         self.code = try self.allocator.realloc(self.code, self.capacity);
-        self.lines = try self.allocator.realloc(self.code, self.capacity);
+        self.lines = try self.allocator.realloc(self.lines, self.capacity);
     }
 
-    pub fn writeChunk(self: *Chunk, byte: u32, line: u32) !void {
+    pub fn writeChunk(self: *Chunk, byte: u8, line: u32) !void {
         if (self.capacity < self.count + 1) {
             self.growCapacity();
             try self.growArray();
@@ -39,7 +39,7 @@ pub const Chunk = struct {
         self.lines[self.count] = line;
         self.count += 1;
     }
-    pub fn addConstant(self: *Chunk, chunk_value: value.Value) !u32 {
+    pub fn addConstant(self: *Chunk, chunk_value: value.Value) !u8 {
         try self.constants.writeValue(chunk_value);
         return self.constants.count - 1;
     }
