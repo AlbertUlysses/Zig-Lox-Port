@@ -5,11 +5,14 @@ const lox_debug = @import("lox_debug.zig");
 const vm = @import("vm.zig");
 const STACK_MAX: u32 = 256;
 
+
 pub fn main() !void {
     var gpa = std.heap.DebugAllocator(.{}).init;
     defer _ = gpa.deinit();
     const ally = gpa.allocator();
 
+    var vm_instance = vm.VM;
+    //defer vm_instance.deinit();
     var new_chunk = try chunk.Chunk.init(ally, 0, 4);
     defer new_chunk.deinit();
 
