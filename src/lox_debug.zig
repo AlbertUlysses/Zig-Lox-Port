@@ -13,7 +13,7 @@ fn constantInstruction(name: []const u8, chunky: *chunk.Chunk, offset: u32) u32 
     std.debug.print("'\n", .{});
     return offset + 2;
 }
-fn disassembleInstruction(chunky: *chunk.Chunk, offset: u32) u32 {
+pub fn disassembleInstruction(chunky: *chunk.Chunk, offset: u32) u32 {
     std.debug.print("{d:0>4}", .{offset});
     if ((offset > 0) and (chunky.lines[offset] == chunky.lines[offset - 1])) {
         std.debug.print("    | ", .{});
@@ -24,6 +24,21 @@ fn disassembleInstruction(chunky: *chunk.Chunk, offset: u32) u32 {
     switch (instruction) {
         .OP_CONSTANT => {
             return constantInstruction("OP_CONSTANT", chunky, offset);
+        },
+        .OP_ADD => {
+            return simpleInstruction("OP_ADD", offset);
+        },
+        .OP_SUBTRACT => {
+            return simpleInstruction("OP_SUBTRACT", offset);
+        },
+        .OP_MULTIPLY => {
+            return simpleInstruction("OP_MULTIPLY", offset);
+        },
+        .OP_DIVIDE => {
+            return simpleInstruction("OP_DIVIDE", offset);
+        },
+        .OP_NEGATE => {
+            return simpleInstruction("OP_NEGATE", offset);
         },
         .OP_RETURN => {
             return simpleInstruction("OP_RETURN", offset);
