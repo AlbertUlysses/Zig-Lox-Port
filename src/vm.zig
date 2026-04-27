@@ -28,21 +28,24 @@ pub const VM = struct {
     fn run(self: *VM) InterpretResult {
         var offset: u32 = 0;
         while (true) {
-            // should have a debug flag to execute below code
-            _ = debug.disassembleInstruction(self.chunk, offset);
-            std.debug.print("           ", .{});
-            for (0..self.stackTop) |slot| {
-                std.debug.print("[ ", .{});
-                value.printValue(self.stack[slot]);
-                std.debug.print("[ ", .{});
-            }
-            std.debug.print("\n", .{});
+            //should have a debug flag to execute below code
+            // _ = debug.disassembleInstruction(self.chunk, offset);
+            // std.debug.print("           ", .{});
+            // for (0..self.stackTop) |slot| {
+            //     std.debug.print("[ ", .{});
+            //     value.printValue(self.stack[slot]);
+            //     std.debug.print("] ", .{});
+            // }
+            // std.debug.print("\n", .{});
             // should have a debug flag to execute above code
             const instruction: chunk.OpCode = @enumFromInt(self.ip[offset]);
             switch (instruction) {
                 .OP_CONSTANT => {
+                    std.debug.print("constant\n", .{});
                     const constant = self.chunk.constants.values[self.ip[offset]];
+                    std.debug.print("constant {d}\n", .{constant});
                     self.push(constant);
+                    offset += 2;
                 },
                 // could refactor to simplify the code below
                 .OP_ADD => {
@@ -50,28 +53,34 @@ pub const VM = struct {
                     const b = self.pop();
                     const a = self.pop();
                     self.push(a + b);
+                    offset += 1;
                 },
                 .OP_SUBTRACT => {
                     std.debug.print("sub\n", .{});
                     const b = self.pop();
                     const a = self.pop();
                     self.push(a - b);
+                    offset += 1;
                 },
                 .OP_MULTIPLY => {
                     std.debug.print("multi\n", .{});
                     const b = self.pop();
                     const a = self.pop();
                     self.push(a * b);
+                    offset += 1;
                 },
                 .OP_DIVIDE => {
                     std.debug.print("divide\n", .{});
                     const b = self.pop();
                     const a = self.pop();
                     self.push(a / b);
+                    offset += 1;
                 },
                 // could refactor to simplify the code above
                 .OP_NEGATE => {
-                    self.push(-self.pop());
+                    std.debug.print("negate\n", .{});
+                    self.push(-1 * self.pop());
+                    offset += 1;
                 },
                 .OP_RETURN => {
                     value.printValue(self.pop());
@@ -80,17 +89,20 @@ pub const VM = struct {
                 },
                 //else => .INTERPET_COMPILE_ERROR,
             }
-            offset += 1;
         }
     }
     pub fn interpret(self: *VM) InterpretResult {
         return self.run();
     }
     fn push(self: *VM, valuey: value.Value) void {
+        std.debug.print("push\n", .{});
+        std.debug.print("stacktop {d}\n", .{self.stackTop});
         self.stack[self.stackTop] = valuey;
         self.stackTop += 1;
     }
     fn pop(self: *VM) value.Value {
+        std.debug.print("pop\n", .{});
+        std.debug.print("stacktop {d}\n", .{self.stackTop});
         self.stackTop -= 1;
         return self.stack[self.stackTop];
     }
