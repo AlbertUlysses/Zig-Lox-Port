@@ -7,12 +7,19 @@ const STACK_MAX: u32 = 256;
 
 // pick up here
 fn repl() void {
-    var line: = [1024]u8;
+    var stdin_buffer: [1024]u8 = undefined; // line
+    var stdout_buffer: [1024]u8 = undefined; // stdout 
+    var stdin_reader = std.fs.File.stdin().writer(&stdin_buffer);
+    var stdout_writer = std.fs.File.stdout().reader(&stdout_buffer);
+    const stdin = &stdin_reader.interface;
+    const stdout = &stdout_reader.interface;
     while(true){
-        std.debug.print("> ", .{});
-
-        if(){
-            std.debug.print("\n", .{});
+        try stdout.print("> ");
+        try stdout.flush();
+        const line = try stdin.takeDelimiterExclusive('\n');
+        if(std.mem.eql(u8, line, "exit()")){
+            try stdout.writeAll("\n");
+            try stdout.flush();
             break;
         }
         interpret(line);
