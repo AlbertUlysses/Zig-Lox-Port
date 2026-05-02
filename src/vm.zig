@@ -2,6 +2,7 @@ const std = @import("std");
 const chunk = @import("chunk.zig");
 const value = @import("value.zig");
 const debug = @import("lox_debug.zig");
+const compiler = @import("compiler.zig");
 
 pub const InterpretResult = enum(u8) {
     INTERPRET_OK,
@@ -91,8 +92,9 @@ pub const VM = struct {
             }
         }
     }
-    pub fn interpret(self: *VM) InterpretResult {
-        return self.run();
+    pub fn interpret(self: *VM, source: []u8) InterpretResult {
+        self.compiler.compile(source);
+        return .INTERPRET_OK;
     }
     fn push(self: *VM, valuey: value.Value) void {
         std.debug.print("push\n", .{});
