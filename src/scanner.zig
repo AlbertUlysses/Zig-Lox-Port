@@ -46,21 +46,21 @@ pub const TokenType = enum {
     TOKEN_EOF,
 };
 pub const Scanner = struct {
-    start: u8,
-    current: u8,
-    source: [*]u8,
+    start: []u8,
+    current: []u8,
     line: u8,
-    pub fn init(source: [*]u8) Scanner {
+    pub fn init(start: []u8, current: []u8) Scanner {
         // may need to revisit here becuase we're passing in pointers to a string - however
         // maybe we can just keep track of it? It would be easier if we can just pass
         // that string and keep track of pointers - but let's see
-        return .{ .start = 0, .current = 0, .source=source .line = 1 };
+        return .{ .start = start, .current = current, .line = 1 };
     }
     pub fn scanToken(self: *Scanner) Token {
-        self.start = self.curlrent;
-        if(self.source.*.len-1 == self.current) return self.makeToken(TOKEN_EOF);
-        return errorToken("Unexpected Character.\n");
+        self.start = self.current;
+        if (self.current.len == 1) return self.makeToken(TokenType.TOKEN_EOF);
+        return TokenType.errorToken("Unexpected Character.\n");
     }
+    // make token.
 };
 
-pub const Token = struct { type: TokenType, start: [*]u8, length: u32, line: u32 };
+pub const Token = struct { type: TokenType, start: []u8, length: u32, line: u32 };

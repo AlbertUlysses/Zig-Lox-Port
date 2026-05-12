@@ -42,9 +42,7 @@ fn runFile(path: []u8, vmy: vm.VM, ally: std.mem.Allocator) void {
 fn readFile(path: []u8, ally: std.mem.Allocator) void {
     const cwd = std.fs.cwd();
     const max_bytes = 16 * 1024 * 1024; // reading in the whole text of the file
-    const text = try cwd.readFileAlloc(ally, path, max_bytes);
-    // book checks if it's null but we will check if len is none
-    switch (text) {
+    const text = cwd.readFileAlloc(ally, path, max_bytes) catch |err| switch (err) {
         error.FileTooBig => {
             std.debug.print("Not enough memory to read \n", .{});
             std.process.exit(74);
@@ -53,11 +51,9 @@ fn readFile(path: []u8, ally: std.mem.Allocator) void {
             std.debug.print("Could not open file {s}\n", .{path});
             std.process.exit(74);
         },
-        else => {
-            return text;
-        },
-    }
-    //return text;
+        else => |e| return e,
+    };
+    return text;
 }
 // start on interpret code
 // start on interpret code
