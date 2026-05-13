@@ -48,7 +48,7 @@ pub const TokenType = enum {
 pub const Scanner = struct {
     start: []u8,
     current: []u8,
-    line: u8,
+    line: u16,
     pub fn init(start: []u8, current: []u8) Scanner {
         // may need to revisit here becuase we're passing in pointers to a string - however
         // maybe we can just keep track of it? It would be easier if we can just pass
@@ -58,9 +58,41 @@ pub const Scanner = struct {
     pub fn scanToken(self: *Scanner) Token {
         self.start = self.current;
         if (self.current.len == 1) return self.makeToken(TokenType.TOKEN_EOF);
-        return TokenType.errorToken("Unexpected Character.\n");
+        const c = self.advance();
+        switch (c) {
+            '(' => return self.makeToken(TokenType.TOKEN_LEFT_PAREN),
+            ')' => return self.makeToken(TokenType.TOKEN_RIGHT_PAREN),
+            '{' => return self.makeToken(TokenType.TOKEN_LEFT_BRACE),
+            '}' => return self.makeToken(TokenType.TOKEN_RIGHT_BRACE),
+            ';' => return self.makeToken(TokenType.TOKEN_SEMICOLON),
+            ',' => return self.makeToken(TokenType.TOKEN_COMMA),
+            '.' => return self.makeToken(TokenType.TOKEN_DOT),
+            '-' => return self.makeToken(TokenType.TOKEN_MINUS),
+            '+' => return self.makeToken(TokenType.TOKEN_PLUS),
+            '/' => return self.makeToken(TokenType.TOKEN_SLASH),
+            '*' => return self.makeToken(TokenType.TOKEN_STAR),
+            else => return TokenType.errorToken,
+        }
+        return Token.initError("Unexpected Character.\n");
     }
-    // make token.
+    fn advance(self: *Scanner) []u8 {
+        defer self.current = self.current[1..];
+        return self.current[0..];
+    }
+    pub fn makeToke(self: *Scanner, token_type: TokenType) Token {
+        const token = Token().init(token_type, self.start, self.line);
+        return token;
+    }
 };
 
-pub const Token = struct { type: TokenType, start: []u8, length: u32, line: u32 };
+pub const Token = struct {
+    token_type: TokenType,
+    start: []u8,
+    line: u16,
+    pub fn init(token_type: TokenType, start: []u8, line: u16) Token {
+        return .{ .token_type = token_type, .start = start, .line = line };
+    }
+    pub fn initError(start: []u8, line: u16) Token {
+        return .{ .token_type = TokenType.TOKEN_ERROR, .start = start, .line = line };
+    }
+};
