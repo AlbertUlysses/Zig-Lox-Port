@@ -56,6 +56,7 @@ pub const Scanner = struct {
         return .{ .start = start, .current = current, .line = 1 };
     }
     pub fn scanToken(self: *Scanner) Token {
+        self.skipWhiteSpace();
         self.start = self.current;
         if (self.current.len == 1) return self.makeToken(TokenType.TOKEN_EOF);
         const c = self.advance();
@@ -71,13 +72,54 @@ pub const Scanner = struct {
             '+' => return self.makeToken(TokenType.TOKEN_PLUS),
             '/' => return self.makeToken(TokenType.TOKEN_SLASH),
             '*' => return self.makeToken(TokenType.TOKEN_STAR),
+            '!' => return self.makeToken(if (self.match('=')) TokenType.TOKEN_BANG_EQUAL else TokenType.TOKEN_BANG),
+            '=' => return self.makeToken(if (self.match('=')) TokenType.TOKEN_EQUAL_EQUAL else TokenType.TOKEN_EQUAL),
+            '<' => return self.makeToken(if (self.match('=')) TokenType.TOKEN_LESS_EQUAL else TokenType.TOKEN_LESS),
+            '>' => return self.makeToken(if (self.match('=')) TokenType.TOKEN_GREATER_EQUAL else TokenType.TOKEN_GREATER),
             else => return TokenType.errorToken,
         }
         return Token.initError("Unexpected Character.\n");
     }
+    fn skipWhiteSpace(self: *Scanner) void {
+        while (true) {
+            const c: u8 = self.peek();
+            switch (c) {
+                ' ', 'r', '\t' => self.advance(),
+                '\n' => {
+                    self.line += 1;
+                    self.advance();
+                },
+                '/' => {
+                    if (self.peekNext() == '/') {
+                        while (self.peek() != '\n' and self.current.len != 1) {
+                            self.advance();
+                        }
+                    } else {
+                        return;
+                    }
+                },
+                else => return,
+            }
+        }
+    }
+    fn match(self: *Scanner, expected: u8) bool {
+        if (self.current.len == 1) return false;
+        if (self.current != expected) return false;
+        self.current = self.current[1..];
+        return true;
+    }
+    fn peek(self: *Scanner) u8 {
+        return self.current[0];
+    }
     fn advance(self: *Scanner) []u8 {
         defer self.current = self.current[1..];
-        return self.current[0..];
+        return self.current[0];
+    }
+    fn peekNext(self: *Scanner) u8 {
+        // pick up here
+        if (self.current.len == 1) return '\0';
+        // not sure what to when null terminator isn't allowed
+        return self.current[1];
     }
     pub fn makeToke(self: *Scanner, token_type: TokenType) Token {
         const token = Token().init(token_type, self.start, self.line);
