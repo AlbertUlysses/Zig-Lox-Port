@@ -58,7 +58,7 @@ pub const Scanner = struct {
     pub fn scanToken(self: *Scanner) Token {
         self.skipWhiteSpace();
         self.start = self.current;
-        if (self.current.len == 1) return self.makeToken(TokenType.TOKEN_EOF);
+        if (self.isAtEnd()) return self.makeToken(TokenType.TOKEN_EOF);
         const c = self.advance();
         switch (c) {
             '(' => return self.makeToken(TokenType.TOKEN_LEFT_PAREN),
@@ -76,9 +76,10 @@ pub const Scanner = struct {
             '=' => return self.makeToken(if (self.match('=')) TokenType.TOKEN_EQUAL_EQUAL else TokenType.TOKEN_EQUAL),
             '<' => return self.makeToken(if (self.match('=')) TokenType.TOKEN_LESS_EQUAL else TokenType.TOKEN_LESS),
             '>' => return self.makeToken(if (self.match('=')) TokenType.TOKEN_GREATER_EQUAL else TokenType.TOKEN_GREATER),
-            else => return TokenType.errorToken,
+            '"' => return self.string(),
+            else => return TokenType.TOKEN_ERROR,
         }
-        return Token.initError("Unexpected Character.\n");
+        return self.makeTokenError("Unexpected Character.\n");
     }
     fn skipWhiteSpace(self: *Scanner) void {
         while (true) {
@@ -91,7 +92,7 @@ pub const Scanner = struct {
                 },
                 '/' => {
                     if (self.peekNext() == '/') {
-                        while (self.peek() != '\n' and self.current.len != 1) {
+                        while (self.peek() != '\n' and !(self.isAtEnd())) {
                             self.advance();
                         }
                     } else {
@@ -102,8 +103,22 @@ pub const Scanner = struct {
             }
         }
     }
+    fn isAtEnd(self: *Scanner) bool {
+        return self.current.len == 0;
+    }
+    fn string(self: *Scanner) Token {
+        while (self.peek() != '"' and !(self.isAtEnd())) {
+            if (self.peek() == '\n') {
+                self.line += 1;
+            }
+            self.advanace();
+        }
+        if (self.isAtEnd()) return Token.initError("Unterminated String.\n");
+        self.advance();
+        self.makeToken(TokenType.TOKEN_STRING);
+    }
     fn match(self: *Scanner, expected: u8) bool {
-        if (self.current.len == 1) return false;
+        if (self.isAtEnd()) return false;
         if (self.current != expected) return false;
         self.current = self.current[1..];
         return true;
@@ -115,16 +130,17 @@ pub const Scanner = struct {
         defer self.current = self.current[1..];
         return self.current[0];
     }
-    fn peekNext(self: *Scanner) u8 {
-        // pick up here
-        if (self.current.len == 1) return '\0';
-        // not sure what to when null terminator isn't allowed
+    fn peekNext(self: *Scanner) ?u8 {
+        if (self.isAtEnd()) return null;
         return self.current[1];
     }
-    pub fn makeToke(self: *Scanner, token_type: TokenType) Token {
-        const token = Token().init(token_type, self.start, self.line);
+    fn makeToken(self: *Scanner, token_type: TokenType) Token {
+        const token = Token.init(token_type, self.start, self.line);
         return token;
     }
+    // fix this and remove initError need to see if we can pass a string into TOken
+    // maybe using a union?
+    fn errorToken(self: *Scanner, ){}
 };
 
 pub const Token = struct {
