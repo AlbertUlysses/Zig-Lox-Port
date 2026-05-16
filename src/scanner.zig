@@ -140,17 +140,17 @@ pub const Scanner = struct {
     }
     // fix this and remove initError need to see if we can pass a string into TOken
     // maybe using a union?
-    fn errorToken(self: *Scanner, ){}
+    fn errorToken(self: *Scanner, message: []const u8) Token {
+        const token = Token.init(TokenType.TOKEN_ERROR, message, self.line);
+        return token;
+    }
 };
 
 pub const Token = struct {
     token_type: TokenType,
-    start: []u8,
+    start: []const u8,
     line: u16,
-    pub fn init(token_type: TokenType, start: []u8, line: u16) Token {
+    pub fn init(token_type: TokenType, start: []const u8, line: u16) Token {
         return .{ .token_type = token_type, .start = start, .line = line };
-    }
-    pub fn initError(start: []u8, line: u16) Token {
-        return .{ .token_type = TokenType.TOKEN_ERROR, .start = start, .line = line };
     }
 };
