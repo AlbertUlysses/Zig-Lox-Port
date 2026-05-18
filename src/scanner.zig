@@ -46,20 +46,28 @@ pub const TokenType = enum {
     TOKEN_EOF,
 };
 pub const Scanner = struct {
-    start: []u8,
-    current: []u8,
+    start: []const u8,
+    current: []const u8,
     line: u16,
-    pub fn init(start: []u8, current: []u8) Scanner {
-        // may need to revisit here becuase we're passing in pointers to a string - however
-        // maybe we can just keep track of it? It would be easier if we can just pass
-        // that string and keep track of pointers - but let's see
+    pub fn init(start: []const u8, current: []const u8) Scanner {
         return .{ .start = start, .current = current, .line = 1 };
     }
+    fn isAlpha(c: u8) bool {
+        return ((c >= 'a' and c <= 'z') or
+            (c >= 'A' and c <= 'Z') or
+            c == '_');
+    }
+    fn isDigit(c: u8) bool {
+        return c >= '0' and c <= '9';
+    }
+
     pub fn scanToken(self: *Scanner) Token {
         self.skipWhiteSpace();
         self.start = self.current;
         if (self.isAtEnd()) return self.makeToken(TokenType.TOKEN_EOF);
         const c = self.advance();
+        if (self.isAlpha(c)) return self.identief();
+        if (self.isDigit(c)) return self.number();
         switch (c) {
             '(' => return self.makeToken(TokenType.TOKEN_LEFT_PAREN),
             ')' => return self.makeToken(TokenType.TOKEN_RIGHT_PAREN),
@@ -103,6 +111,58 @@ pub const Scanner = struct {
             }
         }
     }
+    fn checkKeyword(self: *Scanner, rest: []const u8, token_type: TokenType) TokenType {
+        if (std.mem.eql(u8, self.current[1 .. rest.len + 1], rest)) return token_type;
+    }
+    fn identifierType(self: *Scanner) TokenType {
+        switch (self.start[0]) {
+            'a' => return self.checkKeyword("nd", .TOKEN_AND),
+            'c' => return self.checkKeyword("lass", .TOKEN_CLASS),
+            'e' => return self.checkKeyword("lse", .TOKEN_ELSE),
+            'f' => {
+                if (self.current.len > 1) {
+                    switch (self.scanner.start[1]) {
+                        'a' => return self.checkKeyword("lse", .TOKEN_FALSE),
+                        'o' => return self.checkKeyword("r", .TOKEN_FOR),
+                        'u' => return self.checkKeyword("n", .TOKEN_FUN),
+                    }
+                }
+            },
+            'i' => return self.checkKeyword("f", .TOKEN_IF),
+            'n' => return self.checkKeyword("il", .TOKEN_NIL),
+            'o' => return self.checkKeyword("r", .TOKEN_OR),
+            'p' => return self.checkKeyword("rint", .TOKEN_PRINT),
+            'r' => return self.checkKeyword("eturn", .TOKEN_RETURN),
+            's' => return self.checkKeyword("uper", .TOKEN_SUPER),
+            'v' => return self.checkKeyword("ar", .TOKEN_VAR),
+            'w' => return self.checkKeyword("hile", .TOKEN_WHILE),
+        }
+        return .TOKEN_IDENTIFIER;
+    }
+
+    fn identifier(self: *Scanner) Token {
+        while (self.isAlpha(self.peek()) or self.isDigit(self.peek())) {
+            self.advance();
+        }
+        return self.makeToken(self.identifierType());
+    }
+    fn number(self: *Scanner) void {
+        while (self.isDigit(self.peek())) {
+            self.advance();
+        }
+        // look for a fractional part
+        if (self.peek() == '.' and self.isDigit(self.peekNext())) {
+            //consume the '.'
+            self.advance();
+            // this is ugly but probably more optimized since we only check once
+            // however it would also be infinite if we added it back up since we only check once
+            // however it would also be infinite if we added it back up.
+            while (self.isDigit(self.peek())) {
+                self.advance();
+            }
+        }
+        return self.makeToken(TokenType.TOKEN_NUMBER);
+    }
     fn isAtEnd(self: *Scanner) bool {
         return self.current.len == 0;
     }
@@ -113,7 +173,7 @@ pub const Scanner = struct {
             }
             self.advanace();
         }
-        if (self.isAtEnd()) return Token.initError("Unterminated String.\n");
+        if (self.isAtEnd()) return self.errorToken("Unterminated String.\n");
         self.advance();
         self.makeToken(TokenType.TOKEN_STRING);
     }
@@ -138,8 +198,6 @@ pub const Scanner = struct {
         const token = Token.init(token_type, self.start, self.line);
         return token;
     }
-    // fix this and remove initError need to see if we can pass a string into TOken
-    // maybe using a union?
     fn errorToken(self: *Scanner, message: []const u8) Token {
         const token = Token.init(TokenType.TOKEN_ERROR, message, self.line);
         return token;
