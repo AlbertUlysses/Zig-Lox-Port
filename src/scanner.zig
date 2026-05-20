@@ -120,7 +120,7 @@ pub const Scanner = struct {
             'c' => return self.checkKeyword("lass", .TOKEN_CLASS),
             'e' => return self.checkKeyword("lse", .TOKEN_ELSE),
             'f' => {
-                if (self.current.len > 1) {
+                if (self.start.len > 0) {
                     switch (self.scanner.start[1]) {
                         'a' => return self.checkKeyword("lse", .TOKEN_FALSE),
                         'o' => return self.checkKeyword("r", .TOKEN_FOR),
@@ -134,6 +134,14 @@ pub const Scanner = struct {
             'p' => return self.checkKeyword("rint", .TOKEN_PRINT),
             'r' => return self.checkKeyword("eturn", .TOKEN_RETURN),
             's' => return self.checkKeyword("uper", .TOKEN_SUPER),
+            't' => return {
+                if (self.start.len > 1) {
+                    switch (self.start[1]) {
+                        'h' => return self.checkKeyword("is", .TOKEN_THIS),
+                        'r' => return self.checkKeyword("ue", .TOKEN_TRUE),
+                    }
+                }
+            },
             'v' => return self.checkKeyword("ar", .TOKEN_VAR),
             'w' => return self.checkKeyword("hile", .TOKEN_WHILE),
         }
