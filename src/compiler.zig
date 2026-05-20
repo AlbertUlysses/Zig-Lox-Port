@@ -1,18 +1,25 @@
 const std = @import("std");
 const scanner = @import("scanner.zig");
 
-pub fn compile(source: []u8) void {
-    scanner = scanner.Scanner(source).init();
-    var line: i8 = -1;
-    while (true) {
-        const token = scanner.scanToken();
-        if (token.line != line) {
-            std.debug.print("{4d} ", .{token.line});
-            line = token.line;
-        } else {
-            std.debug.print("    | ", .{});
+const Parser = struct{
+    scanner: *scanner.Scanner,
+    current: scanner.Token,
+    previous: scanner.Token,
+
+    pub fn advance(self: *Parser) void {
+        self.previous = self.current;
+        while(true){
+            self.current = self.scanner.scanToken();
+            if(self.current.token_type != scanner.TokenType.TOKEN_ERROR) break;
+            self.errorAtCurrent(self.current.start);
         }
-        std.debug.print("{2d} '%.s'\n", .{ token.type, token.length, token.start });
-        if (token.type == .TOKEN_EOF) break;
     }
+};
+pub fn compile(source: []const u8) bool {
+    scanner = scanner.Scanner(source).init();
+    // parser init
+    self.advance();
+    self.expression();
+    self.consumer(.TOKEN_EOF, "Expect end of Expression.");
 }
+

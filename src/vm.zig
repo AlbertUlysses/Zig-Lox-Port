@@ -92,9 +92,13 @@ pub const VM = struct {
             }
         }
     }
-    pub fn interpret(self: *VM, source: []u8) InterpretResult {
-        self.compiler.compile(source);
-        return .INTERPRET_OK;
+    pub fn interpret(self: *VM, source: []const u8) InterpretResult {
+        if (!self.compiler.compile(source)) {
+            return .INTERPRET_COMPILER_ERROR;
+        }
+        self.ip = self.chunk.code;
+        const result: InterpretResult = self.run();
+        return result;
     }
     fn push(self: *VM, valuey: value.Value) void {
         std.debug.print("push\n", .{});
