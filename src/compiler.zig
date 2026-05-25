@@ -1,6 +1,8 @@
 const std = @import("std");
 const scanner = @import("scanner.zig");
 const Chunk = @import("chunk.zig").Chunk;
+const OpCode = @import("chunk.zig").OpCode;
+const Value = @import("value.zig").Value;
 
 const Parser = struct {
     scanner: *scanner.Scanner,
@@ -52,22 +54,44 @@ const Parser = struct {
 // maybe we move the chunk to the parser?
 // or we pass the line into the function..
 // but these are related to chunk code they just don't have a place in this file ... yet
-pub fn emitByte(byte: u8) void {
-    Chunk.writeChunk(currentChunk(), byte, parser.previous.line());
+pub fn emitByte(chunk: *Chunk, byte: u8, parser: Parser) void {
+    chunk.writeChunk(byte, parser.previous.line());
 }
-//pick up below
-pub fn currentChunk() *Chunk {
-    return compilingChunk;
+pub fn emitReturn(byte1: u8, byte2: u8) void {
+    emitByte(byte1);
+    emitByte(byte2);
+}
+pub fn makeConstant(value: Value) u8 {
+    const constant = addConstant(currentChunk(), value);
+    if (constant > std.math.maxInt(u8)){
+        errorFn("Too many constants in one chunk.");
+        return 0;
+    }
+    return constant;
+}
+pub fn emitConstant(value: Value) void {
+    emitBytes(OpCode.OP_CONSTANT, makeConstant(value));
 }
 //pick up above
 // above needs grouping
+pub fn endCompiler()void{
+    emitReturn();
+}
+pub fn number(parser: Parse)void{
+    const value: f64 = std.fmt.parseFloat(f64, parse.previous.start);
+    emitConstant(value);
+}
+pub fn expression()void{
+}
 
 pub fn compile(source: []const u8, chunk: *Chunk) bool {
     scanner = scanner.Scanner(source).init();
     // parser code is only defined and used here
     const parser = Parser.init(scanner);
+    const compilingChunk: *Chunk = chunk;
     parser.advance();
     parser.expression();
-    parser.consumer(.TOKEN_EOF, "Expect end of Expression.");
+    parser.consume(.TOKEN_EOF, "Expect end of Expression.");
+    endCompiler();
     return !parser.hadError;
 }
