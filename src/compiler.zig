@@ -3,7 +3,21 @@ const scanner = @import("scanner.zig");
 const Chunk = @import("chunk.zig").Chunk;
 const OpCode = @import("chunk.zig").OpCode;
 const Value = @import("value.zig").Value;
+const TokenType = @import("scanner").TokenType;
 
+const Precedence = enum {
+    PREC_NONE,
+    PREC_ASSIGNMENT, // =
+    PREC_OR, // or
+    PREC_AND, // and
+    PREC_EQUALITY, // == !=
+    PREC_COMPARISON, // < > <= >=
+    PREC_TERM, // + -
+    PREC_FACTOR, // * /
+    PREC_UNARY, // ! -
+    PREC_CALL, // . ()
+    PREC_PRIMARY,
+};
 const Parser = struct {
     scanner: *scanner.Scanner,
     current: ?scanner.Token,
@@ -57,14 +71,19 @@ const Parser = struct {
 pub fn emitByte(chunk: *Chunk, byte: u8, parser: Parser) void {
     chunk.writeChunk(byte, parser.previous.line());
 }
-pub fn emitReturn(byte1: u8, byte2: u8) void {
+pub fn emitReturn() void {
+    emitByte(OpCode.OP_RETURN);
+}
+
+pub fn emitBytes(byte1: u8, byte2: u8) void {
     emitByte(byte1);
     emitByte(byte2);
 }
-pub fn makeConstant(value: Value) u8 {
-    const constant = addConstant(currentChunk(), value);
-    if (constant > std.math.maxInt(u8)){
-        errorFn("Too many constants in one chunk.");
+pub fn makeConstant(value: Value, current_chunk: *Chunk) u8 {
+    const constant = current_chunk.addConstant(value);
+    if (constant > std.math.maxInt(u8)) {
+        // below probably needs refactoring to actually work
+        scanner.Scanner.errorToken("Too many constants in one chunk.");
         return 0;
     }
     return constant;
@@ -74,14 +93,34 @@ pub fn emitConstant(value: Value) void {
 }
 //pick up above
 // above needs grouping
-pub fn endCompiler()void{
+pub fn endCompiler() void {
     emitReturn();
 }
-pub fn number(parser: Parse)void{
-    const value: f64 = std.fmt.parseFloat(f64, parse.previous.start);
+pub fn grouping(parser: *Parser) void {
+    expression();
+    parser.consume(TokenType.TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
+}
+pub fn number(parser: *Parser) void {
+    const value: f64 = std.fmt.parseFloat(f64, parser.previous.start);
     emitConstant(value);
 }
-pub fn expression()void{
+pub fn unary(parser: *Parser) void {
+    const operatorType: TokenType = parser.previous.type;
+    expression();
+    switch (operatorType) {
+        .TOKEN_MINUS => emitByte(OpCode.OP_NEGATE),
+        else => {
+            unreachable;
+        },
+    }
+}
+
+pub fn parsePrecedence(precedence: Precedence) void {
+    // throw away below -- it's just a place holder
+    _ = precedence;
+}
+pub fn expression() void {
+    parsePrecedence(Precedence.PREC_ASSIGNMENT);
 }
 
 pub fn compile(source: []const u8, chunk: *Chunk) bool {
@@ -89,6 +128,8 @@ pub fn compile(source: []const u8, chunk: *Chunk) bool {
     // parser code is only defined and used here
     const parser = Parser.init(scanner);
     const compilingChunk: *Chunk = chunk;
+    // place holder for now
+    _ = compilingChunk;
     parser.advance();
     parser.expression();
     parser.consume(.TOKEN_EOF, "Expect end of Expression.");
