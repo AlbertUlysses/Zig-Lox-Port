@@ -17,7 +17,22 @@ const Precedence = enum {
     PREC_UNARY, // ! -
     PREC_CALL, // . ()
     PREC_PRIMARY,
+    // can add precedence code here
+    // pub fn precedenceFunction(self: Precedence) usize {
+    //      here it should do work on the self like check what it is
+    //      for example
+    //      return @intFromEnum(self);
+    //      this returns the usize of the Precedence class
+    // };
 };
+
+const ParseRule = struct{
+    // parsefn are functions - these are probably better as methods or sometype of ducktyping that can be determined at runtime
+    prefix: Parsefn, 
+    infix: Parsefn,
+    precedence: Precdence,
+};
+
 const Parser = struct {
     scanner: *scanner.Scanner,
     current: ?scanner.Token,
@@ -96,6 +111,19 @@ pub fn emitConstant(value: Value) void {
 pub fn endCompiler() void {
     emitReturn();
 }
+// below may need to be part of the parser or may need to reference it since it's not changing anything
+pub fn binary(parser: *Parser) void {
+    const operatorType = parser.previos.type;
+    rule = getRule(operatorType);
+    parsePrecedence(rule.precedence+1);
+    switch(operatorType){
+        .TOKEN_PLUS => emitByte(OPCode.OP_ADD),
+        .TOKEN_MINUS => emitByte(OPCode.OP_MINUS),
+        .TOKEN_STAR => emitByte(OPCode.OP_MULTIPLY),
+        .TOKEN_SLASH => emitByte(OPCode.OP_DIVIDE),
+        else => unreachable,
+    }
+}
 pub fn grouping(parser: *Parser) void {
     expression();
     parser.consume(TokenType.TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
@@ -114,7 +142,9 @@ pub fn unary(parser: *Parser) void {
         },
     }
 }
+// above this should be with the parser class
 
+// below it should perhaps be part of a difference class like precedence or maybe added to parser
 pub fn parsePrecedence(precedence: Precedence) void {
     // throw away below -- it's just a place holder
     _ = precedence;
