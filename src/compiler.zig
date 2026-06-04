@@ -142,6 +142,11 @@ pub fn unary(parser: *Parser) void {
         },
     }
 }
+
+// this may need to pass additional things
+// pick up below and use a map
+const rules = {
+};
 // above this should be with the parser class
 
 // below it should perhaps be part of a difference class like precedence or maybe added to parser
