@@ -146,56 +146,65 @@ pub fn unary(parser: *Parser) void {
 // below is used as a designated initializer syntax in c but essentially we will map the
 // index to the enum I'll add the enum number hashed out next to it to remind me on what I have done
 // this could cause issues down the line when the enums list gets either larger or moved around but for this iteration it should be suffient
-const rules = {
-    [_]ParseRule{
-        {grouping, NULL,   PREC_NONE},//  [TOKEN_LEFT_PAREN]   
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_RIGHT_PAREN]  
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_LEFT_BRACE]   
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_RIGHT_BRACE]  
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_COMMA]        
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_DOT]          
-        {unary,    binary, PREC_TERM},//  [TOKEN_MINUS]        
-        {NULL,     binary, PREC_TERM},//  [TOKEN_PLUS]         
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_SEMICOLON]    
-        {NULL,     binary, PREC_FACTOR},//  [TOKEN_SLASH]        
-        {NULL,     binary, PREC_FACTOR},//  [TOKEN_STAR]         
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_BANG]         
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_BANG_EQUAL]   
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_EQUAL]        
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_EQUAL_EQUAL]  
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_GREATER]      
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_GREATER_EQUAL]
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_LESS]         
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_LESS_EQUAL]   
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_IDENTIFIER]   
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_STRING]       
-        {number,   NULL,   PREC_NONE},//  [TOKEN_NUMBER]       
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_AND]          
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_CLASS]        
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_ELSE]         
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_FALSE]        
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_FOR]          
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_FUN]          
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_IF]           
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_NIL]          
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_OR]           
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_PRINT]        
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_RETURN]       
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_SUPER]        
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_THIS]         
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_TRUE]         
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_VAR]          
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_WHILE]        
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_ERROR]        
-        {NULL,     NULL,   PREC_NONE},//  [TOKEN_EOF]          
-};
+const rules = [_]ParseRule{
+        ParseRule{.prefix=grouping, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_LEFT_PAREN]   
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_RIGHT_PAREN]  
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_LEFT_BRACE]   
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_RIGHT_BRACE]  
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_COMMA]        
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_DOT]          
+        ParseRule{.prefix=unary, .infix=binary, .precedence=.PREC_TERM},//  [TOKEN_MINUS]        
+        ParseRule{.prefix=null, .infix=binary, .precedence=.PREC_TERM},//  [TOKEN_PLUS]         
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_SEMICOLON]    
+        ParseRule{.prefix=null, .infix=binary, .precedence=.PREC_FACTOR},//  [TOKEN_SLASH]        
+        ParseRule{.prefix=null, .infix=binary, .precedence=.PREC_FACTOR},//  [TOKEN_STAR]         
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_BANG]         
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_BANG_EQUAL]   
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_EQUAL]        
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_EQUAL_EQUAL]  
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_GREATER]      
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_GREATER_EQUAL]
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_LESS]         
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_LESS_EQUAL]   
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_IDENTIFIER]   
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_STRING]       
+        ParseRule{.prefix=number, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_NUMBER]       
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_AND]          
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_CLASS]        
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_ELSE]         
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_FALSE]        
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_FOR]          
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_FUN]          
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_IF]           
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_NIL]          
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_OR]           
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_PRINT]        
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_RETURN]       
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_SUPER]        
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_THIS]         
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_TRUE]         
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_VAR]          
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_WHILE]        
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_ERROR]        
+        ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_EOF]          
 };
 // above this should be with the parser class
 
 // below it should perhaps be part of a difference class like precedence or maybe added to parser
-pub fn parsePrecedence(precedence: Precedence) void {
-    // throw away below -- it's just a place holder
-    _ = precedence;
+pub fn parsePrecedence(precedence: Precedence, parser: *Parse) void {
+    parser.advance();
+    // ok I think understand ParserFN and ParserRule better, essentially a parser will have a tokentype on previous and based on this we use the corresponding function
+    // I think that means that Parse Rule may also need a reference to the parser in question
+    // so it can execute on that code/method
+    const prefixRule: ParseFn = getRule(parser.previous.type).prefix;
+    if (prefixRule==null) {
+        error("expected expression.");
+        return;
+    }
+    preFixRule(); // this part executes the method...
+}
+pub fn getRule(token_type:TokenType) *ParseRule{
+    return &rules[@intFromEnum(token_type)];
 }
 pub fn expression() void {
     parsePrecedence(Precedence.PREC_ASSIGNMENT);
