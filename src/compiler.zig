@@ -28,9 +28,27 @@ const Precedence = enum {
 
 const ParseRule = struct{
     // parsefn are functions - these are probably better as methods or sometype of ducktyping that can be determined at runtime
-    prefix: Parsefn, 
-    infix: Parsefn,
+    prefix:  []const u8, 
+    infix: []const u8,
     precedence: Precdence,
+    fn run_rule(fix: []const u8, parser: *Parser) void {
+        switch (fix) {
+            "binary" => parser.binary(),
+            "grouping" => parser.grouping(),
+            "number" => parser.number(),
+            "unary" => parser.unary(),
+            else => {
+                unreachable;
+            }
+        }
+    }
+
+    pub fn prefixRule(self: *ParseRule, parser: *Parser) void {
+        self.run_rule(self.prefix, parser);
+    }
+    pub fn infixRule(self: *ParseRule, parser: *Parser) void {
+        self.run_rule(self.infix, parser);
+    }
 };
 
 const Parser = struct {
@@ -110,6 +128,10 @@ pub fn emitConstant(value: Value) void {
 // above needs grouping
 pub fn endCompiler() void {
     emitReturn();
+    // below is for debugging may need to import some things to get it working
+    // if(!parser.hadError) {
+    //    disassemebleChunk(currentChunk(), "code");
+    // }
 }
 // below may need to be part of the parser or may need to reference it since it's not changing anything
 pub fn binary(parser: *Parser) void {
@@ -147,17 +169,17 @@ pub fn unary(parser: *Parser) void {
 // index to the enum I'll add the enum number hashed out next to it to remind me on what I have done
 // this could cause issues down the line when the enums list gets either larger or moved around but for this iteration it should be suffient
 const rules = [_]ParseRule{
-        ParseRule{.prefix=grouping, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_LEFT_PAREN]   
+        ParseRule{.prefix="grouping", .infix=null, .precedence=.PREC_NONE},//  [TOKEN_LEFT_PAREN]   
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_RIGHT_PAREN]  
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_LEFT_BRACE]   
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_RIGHT_BRACE]  
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_COMMA]        
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_DOT]          
-        ParseRule{.prefix=unary, .infix=binary, .precedence=.PREC_TERM},//  [TOKEN_MINUS]        
-        ParseRule{.prefix=null, .infix=binary, .precedence=.PREC_TERM},//  [TOKEN_PLUS]         
+        ParseRule{.prefix="unary", .infix="binary", .precedence=.PREC_TERM},//  [TOKEN_MINUS]        
+        ParseRule{.prefix=null, .infix="binary", .precedence=.PREC_TERM},//  [TOKEN_PLUS]         
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_SEMICOLON]    
-        ParseRule{.prefix=null, .infix=binary, .precedence=.PREC_FACTOR},//  [TOKEN_SLASH]        
-        ParseRule{.prefix=null, .infix=binary, .precedence=.PREC_FACTOR},//  [TOKEN_STAR]         
+        ParseRule{.prefix=null, .infix="binary", .precedence=.PREC_FACTOR},//  [TOKEN_SLASH]        
+        ParseRule{.prefix=null, .infix="binary", .precedence=.PREC_FACTOR},//  [TOKEN_STAR]         
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_BANG]         
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_BANG_EQUAL]   
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_EQUAL]        
@@ -168,7 +190,7 @@ const rules = [_]ParseRule{
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_LESS_EQUAL]   
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_IDENTIFIER]   
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_STRING]       
-        ParseRule{.prefix=number, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_NUMBER]       
+        ParseRule{.prefix="number", .infix=null, .precedence=.PREC_NONE},//  [TOKEN_NUMBER]       
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_AND]          
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_CLASS]        
         ParseRule{.prefix=null, .infix=null, .precedence=.PREC_NONE},//  [TOKEN_ELSE]         
@@ -196,12 +218,21 @@ pub fn parsePrecedence(precedence: Precedence, parser: *Parse) void {
     // ok I think understand ParserFN and ParserRule better, essentially a parser will have a tokentype on previous and based on this we use the corresponding function
     // I think that means that Parse Rule may also need a reference to the parser in question
     // so it can execute on that code/method
-    const prefixRule: ParseFn = getRule(parser.previous.type).prefix;
-    if (prefixRule==null) {
-        error("expected expression.");
+    const rule = getRule(parser.previous.type);
+    if (rule.prefix==null) {
+        error("expected expression."); //i forget where this code lives.
         return;
     }
-    preFixRule(); // this part executes the method...
+    //preFixRule(); // this part executes the method...
+    // ideally we would just  execute the method but since I can't figure it out I'm going to use a swtich for this first iteration. 
+    // the above code should have been a function
+    rule.prefixRule();
+
+    while (precedence <= getRule(parser.current.type).precdence){
+        parser.advance();
+        const rule = getRule(parser.previous.type);
+        rule.infixRule();
+    }
 }
 pub fn getRule(token_type:TokenType) *ParseRule{
     return &rules[@intFromEnum(token_type)];
