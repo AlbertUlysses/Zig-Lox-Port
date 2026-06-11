@@ -1,0 +1,215 @@
+exercise 066
+//
+// "Compile time" is a program's environment while it is being
+// compiled. In contrast, "run time" is the environment while the
+// compiled program is executing (traditionally as machine code
+// on a hardware CPU).
+//
+// Errors make an easy example:
+//
+// 1. Compile-time error: caught by the compiler, usually
+//    resulting in a message to the programmer.
+//
+// 2. Runtime error: either caught by the running program itself
+//    or by the host hardware or operating system. Could be
+//    gracefully caught and handled or could cause the computer
+//    to crash (or halt and catch fire)!
+//
+// All compiled languages must perform a certain amount of logic
+// at compile time in order to analyze the code, maintain a table
+// of symbols (such as variable and function names), etc.
+//
+// Optimizing compilers can also figure out how much of a program
+// can be pre-computed or "inlined" at compile time to make the
+// resulting program more efficient. Smart compilers can even
+// "unroll" loops, turning their logic into a fast linear
+// sequence of statements (at the usually very slight expense of
+// the increased size of the repeated code).
+//
+// Zig takes these concepts further by making these optimizations
+// an integral part of the language itself!
+//
+    // ALL numeric literals in Zig are of type comptime_int or
+    // comptime_float. They are of arbitrary size (as big or
+    // little as you need).
+    //
+    // Notice how we don't have to specify a size like "u8",
+    // "i32", or "f64" when we assign identifiers immutably with
+    // "const".
+    //
+    // When we use these identifiers in our program, the VALUES
+    // are inserted at compile time into the executable code. The
+    // IDENTIFIERS "const_int" and "const_float" don't exist in
+    // our compiled application!
+
+    // But something changes when we assign the exact same values
+    // to identifiers mutably with "var".
+    //
+    // The literals are STILL comptime_int and comptime_float,
+    // but we wish to assign them to identifiers which are
+    // mutable at runtime.
+    //
+    // To be mutable at runtime, these identifiers must refer to
+    // areas of memory. In order to refer to areas of memory, Zig
+    // must know exactly how much memory to reserve for these
+    // values. Therefore, it follows that we just specify numeric
+    // types with specific sizes. The comptime numbers will be
+    // coerced (if they'll fit!) into your chosen runtime types.
+    // For this it is necessary to specify a size, e.g. 32 bit.
+
+exercise 67
+//
+// We've seen that Zig implicitly performs some evaluations at
+// compile time. But sometimes you'll want to explicitly request
+// compile time evaluation. For that, we have a new keyword:
+//
+//  .     .   .      o       .          .       *  . .     .
+//    .  *  |     .    .            .   .     .   .     * .    .
+//        --o--            comptime        *    |      ..    .
+//     *    |       *  .        .    .   .    --*--  .     *  .
+//  .     .    .    .   . . .      .        .   |   .    .  .
+// (ASCII art depicting a starry sky with "comptime" as rising star)
+//
+// When placed before a variable declaration, 'comptime'
+// guarantees that every usage of that variable will be performed
+// at compile time.
+//
+// As a simple example, compare these two statements:
+//
+//    var bar1 = 5;            // ERROR!
+//    comptime var bar2 = 5;   // OKAY!
+//
+// The first one gives us an error because Zig assumes mutable
+// identifiers (declared with 'var') will be used at runtime and
+// we have not assigned a runtime type (like u8 or f32). Trying
+// to use a comptime_int of undetermined size at runtime is
+// a MEMORY CRIME and you are UNDER ARREST.
+//
+// The second one is okay because we've told Zig that 'bar2' is
+// a compile time variable. Zig will help us ensure this is true
+// and let us know if we make a mistake.
+//
+//
+exercise 68
+// You can also put 'comptime' before a function parameter to
+// enforce that the argument passed to the function must be known
+// at compile time. We've actually been using a function like
+// this the entire time, std.debug.print():
+//
+//     fn print(comptime fmt: []const u8, args: anytype) void
+//
+// Notice that the format string parameter 'fmt' is marked as
+// 'comptime'.  One of the neat benefits of this is that the
+// format string can be checked for errors at compile time rather
+// than crashing at runtime.
+//
+// (The actual formatting is done by std.Io.Writer.print() and it
+// contains a complete format string parser that runs entirely at
+// compile time!)
+//
+
+exercise  69
+//
+// One of the more common uses of 'comptime' function parameters is
+// passing a type to a function:
+//
+//     fn foo(comptime MyType: type) void { ... }
+//
+// In fact, types are ONLY available at compile time, so the
+// 'comptime' keyword is required here.
+//
+// Please take a moment to put on the wizard hat which has been
+// provided for you. We're about to use this ability to implement
+// a generic function.
+//
+
+exercise 70
+//
+// Being able to pass types to functions at compile time lets us
+// generate code that works with multiple types. But it doesn't
+// help us pass VALUES of different types to a function.
+//
+// For that, we have the 'anytype' placeholder, which tells Zig
+// to infer the actual type of a parameter at compile time.
+//
+//     fn foo(thing: anytype) void { ... }
+//
+// Then we can use builtins such as @TypeOf(), @typeInfo(),
+// @typeName(), @hasDecl(), and @hasField() to determine more
+// about the type that has been passed in. All of this logic will
+// be performed entirely at compile time.
+
+exercise 71
+//
+// There have been several instances where it would have been
+// nice to use loops in our programs, but we couldn't because the
+// things we were trying to do could only be done at compile
+// time. We ended up having to do those things MANUALLY, like
+// NORMAL people. Bah! We are PROGRAMMERS! The computer should be
+// doing this work.
+//
+// An 'inline for' is performed at compile time, allowing you to
+// programmatically loop through a series of items in situations
+// like those mentioned above where a regular runtime 'for' loop
+// wouldn't be allowed:
+//
+//     inline for (.{ u8, u16, u32, u64 }) |T| {
+//         print("{} ", .{@typeInfo(T).int.bits});
+//     }
+//
+// In the above example, we're looping over a list of types,
+// which are available only at compile time.
+//
+
+exercise 72
+//
+// There is also an 'inline while'. Just like 'inline for', it
+// loops at compile time, allowing you to do all sorts of
+// interesting things not possible at runtime. See if you can
+// figure out what this rather bonkers example prints:
+//
+//     const foo = [3]*const [5]u8{ "~{s}~", "<{s}>", "d{s}b" };
+//     comptime var i = 0;
+//
+//     inline while ( i < foo.len ) : (i += 1) {
+//         print(foo[i] ++ "\n", .{foo[i]});
+//     }
+//
+// You haven't taken off that wizard hat yet, have you?
+//
+
+exercise 73
+//
+// As a matter of fact, you can put 'comptime' in front of any
+// expression to force it to be run at compile time.
+//
+// Execute a function:
+//
+//     comptime llama();
+//
+// Get a value:
+//
+//     bar = comptime baz();
+//
+// Execute a whole block:
+//
+//     comptime {
+//         bar = baz + biff();
+//         llama(bar);
+//     }
+//
+// Get a value from a block:
+//
+//     var llama = comptime bar: {
+//         const baz = biff() + bonk();
+//         break :bar baz;
+//     }
+//
+
+exercise 74
+        // This is a good spot to add a @compileLog() call if you need to debug
+        // any variables... (Come back here after you see main().)
+        //@compileLog(std.fmt.comptimePrint("Current value is: {c}", .{char}));
+        //@compileLog(std.fmt.comptimePrint("State: {s}", .{@tagName(state)}));
+
+

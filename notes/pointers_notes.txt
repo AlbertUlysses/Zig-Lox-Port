@@ -1,0 +1,165 @@
+exercise 39
+//
+// Check this out:
+//
+//     var foo: u8 = 5;      // foo is 5
+//     var bar: *u8 = &foo;  // bar is a pointer
+//
+// What is a pointer? It's a reference to a value. In this example,
+// bar is a reference to the memory space that currently contains the
+// value 5.
+//
+// A cheatsheet given the above declarations:
+//
+//     u8         the type of a u8 value
+//     foo        the value 5
+//     *u8        the type of a pointer to a u8 value
+//     &foo       a reference to foo
+//     bar        a pointer to the value at foo
+//     bar.*      the value 5 (the dereferenced value "at" bar)
+//
+// We'll see why pointers are useful in a moment. For now, see if you
+// can make this example work!
+//
+
+exercise 40
+// It's important to note that variable pointers and constant pointers
+// are different types.
+//
+// Given:
+//
+//     var foo: u8 = 5;
+//     const bar: u8 = 5;
+//
+// Then:
+//
+//     &foo is of type "*u8"
+//     &bar is of type "*const u8"
+//
+// You can always make a const pointer to a mutable value (var), but
+// you cannot make a var pointer to an immutable value (const).
+// This sounds like a logic puzzle, but it just means that once data
+// is declared immutable, you can't coerce it to a mutable type.
+// Think of mutable data as being volatile or even dangerous. Zig
+// always lets you be "more safe" and never "less safe."
+
+exercise 41
+//
+// The tricky part is that the pointer's mutability (var vs const) refers
+// to the ability to change what the pointer POINTS TO, not the ability
+// to change the VALUE at that location!
+//
+//     const locked: u8 = 5;
+//     var unlocked: u8 = 10;
+//
+//     const p1: *const u8 = &locked;
+//     var   p2: *const u8 = &locked;
+//
+// Both p1 and p2 point to constant values which cannot change. However,
+// p2 can be changed to point to something else and p1 cannot!
+//
+//     const p3: *u8 = &unlocked;
+//     var   p4: *u8 = &unlocked;
+//     const p5: *const u8 = &unlocked;
+//     var   p6: *const u8 = &unlocked;
+//
+// Here p3 and p4 can both be used to change the value they point to but
+// p3 cannot point at anything else.
+// What's interesting is that p5 and p6 act like p1 and p2, but point to
+// the value at "unlocked". This is what we mean when we say that we can
+// make a constant reference to any value!
+//
+
+exercise 42
+//
+// Now let's use pointers to do something we haven't been
+// able to do before: pass a value by reference to a function.
+//
+// Why would we wish to pass a pointer to an integer variable
+// rather than the integer value itself? Because then we are
+// allowed to *change* the value of the variable!
+//
+//     +-----------------------------------------------+
+//     | Pass by reference when you want to change the |
+//     | pointed-to value. Otherwise, pass the value.  |
+//     +-----------------------------------------------+
+//
+exercise 51
+
+// "glorp_access3" is interesting. It's also a pointer, but it's a
+// const. Won't that disallow changing the gold value? No! As you
+// may recall from our earlier pointer experiments, a constant
+// pointer can't change what it's POINTING AT, but the value at
+// the address it points to is still mutable! So we CAN change it.
+
+const glorp_access3: *Character = &glorp;
+glorp_access3.gold = 333;
+print("3:{}!. ", .{glorp.gold == glorp_access3.gold});
+
+// When arguments are passed to a function,
+// they are ALWAYS passed as constants within the function,
+// regardless of how they were declared in the calling function.
+//
+// Example:
+// fn foo(arg: u8) void {
+//    arg = 42; // Error, 'arg' is const!
+// }
+//
+// fn bar() void {
+//    var arg: u8 = 12;
+//    foo(arg);
+//    ...
+// }
+//
+// Knowing this, see if you can make levelUp() work as expected -
+// it should add the specified amount to the supplied character's
+// experience points.
+
+
+// And there's more!
+//
+// Data segments (allocated at compile time) and "the stack"
+// (allocated at run time) aren't the only places where program data
+// can be stored in memory. They're just the most efficient. Sometimes
+// we don't know how much memory our program will need until the
+// program is running. Also, there is a limit to the size of stack
+// memory allotted to programs (often set by your operating system).
+// For these occasions, we have "the heap".
+//
+// You can use as much heap memory as you like (within physical
+// limitations, of course), but it's much less efficient to manage
+// because there is no built-in CPU support for adding and removing
+// items as we have with the stack. Also, depending on the type of
+// allocation, your program MAY have to do expensive work to manage
+// the use of heap memory. We'll learn about heap allocators later.
+
+exercise 54
+//
+// You can also make pointers to multiple items without using a slice.
+//
+//     var foo: [4]u8 = [4]u8{ 1, 2, 3, 4 };
+//     var foo_slice: []u8 = foo[0..];
+//     var foo_ptr: [*]u8 = &foo;
+//     var foo_slice_from_ptr: []u8 = foo_ptr[0..4];
+//
+// The difference between foo_slice and foo_ptr is that the slice has
+// a known length. The pointer doesn't. It is up to YOU to keep track
+// of the number of u8s foo_ptr points to!
+//
+
+//
+// Are all of these pointer types starting to get confusing?
+//
+//     FREE ZIG POINTER CHEATSHEET! (Using u8 as the example type.)
+//   +---------------+----------------------------------------------+
+//   |  u8           |  one u8                                      |
+//   |  *u8          |  pointer to one u8                           |
+//   |  [2]u8        |  two u8s                                     |
+//   |  [*]u8        |  pointer to unknown number of u8s            |
+//   |  [*]const u8  |  pointer to unknown number of immutable u8s  |
+//   |  *[2]u8       |  pointer to an array of 2 u8s                |
+//   |  *const [2]u8 |  pointer to an immutable array of 2 u8s      |
+//   |  []u8         |  slice of u8s                                |
+//   |  []const u8   |  slice of immutable u8s                      |
+//   +---------------+----------------------------------------------+
+

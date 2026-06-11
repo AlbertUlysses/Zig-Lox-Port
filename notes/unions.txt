@@ -1,0 +1,106 @@
+exercise 55
+//
+// A union lets you store different types and sizes of data at
+// the same memory address. How is this possible? The compiler
+// sets aside enough memory for the largest thing you might want
+// to store.
+//
+// In this example, an instance of Foo always takes up u64 of
+// space in memory even if you're currently storing a u8.
+//
+//     const Foo = union {
+//         small: u8,
+//         medium: u32,
+//         large: u64,
+//     };
+//
+// The syntax looks just like a struct, but a Foo can only hold a
+// small OR a medium OR a large value. Once a field becomes
+// active, the other inactive fields cannot be accessed. To
+// change active fields, assign a whole new instance:
+//
+//     var f = Foo{ .small = 5 };
+//     f.small += 5;                  // OKAY
+//     f.medium = 5432;               // ERROR!
+//     f = Foo{ .medium = 5432 };     // OKAY
+//
+// Unions can save space in memory because they let you "re-use"
+// a space in memory. They also provide a sort of primitive
+// polymorphism. Here fooBar() can take a Foo no matter what size
+// of unsigned integer it holds:
+//
+//     fn fooBar(f: Foo) void { ... }
+//
+// Oh, but how does fooBar() know which field is active? Zig has
+// a neat way of keeping track, but for now, we'll just have to
+// do it manually.
+//
+// Let's see if we can get this program working!
+//
+
+exercise 56
+//
+// It is really quite inconvenient having to manually keep track
+// of the active field in our union, isn't it?
+//
+// Thankfully, Zig also has "tagged unions", which allow us to
+// store an enum value within our union representing which field
+// is active.
+//
+//     const FooTag = enum{ small, medium, large };
+//
+//     const Foo = union(FooTag) {
+//         small: u8,
+//         medium: u32,
+//         large: u64,
+//     };
+//
+// Now we can use a switch directly on the union to act on the
+// active field:
+//
+//     var f = Foo{ .small = 10 };
+//
+//     switch (f) {
+//         .small => |my_small| do_something(my_small),
+//         .medium => |my_medium| do_something(my_medium),
+//         .large => |my_large| do_something(my_large),
+//     }
+//
+// Let's make our Insects use a tagged union (Doctor Zoraptera
+// approves).
+//
+// By the way, did unions remind you of optional values and errors?
+// Optional values are basically "null unions" and errors use "error
+// union types". Now we can add our own unions to the mix to handle
+// whatever situations we might encounter:
+//          union(Tag) { value: u32, toxic_ooze: void }
+exercise 57
+//
+// With tagged unions, it gets EVEN BETTER! If you don't have a
+// need for a separate enum, you can define an inferred enum with
+// your union all in one place. Just use the 'enum' keyword in
+// place of the tag type:
+//
+//     const Foo = union(enum) {
+//         small: u8,
+//         medium: u32,
+//         large: u64,
+//     };
+//
+// Let's convert Insect. Doctor Zoraptera has already deleted the
+// explicit InsectStat enum for you!
+//
+// Inferred enums are neat, representing the tip of the iceberg
+// in the relationship between enums and unions. You can actually
+// coerce a union TO an enum (which gives you the active field
+// from the union as an enum). What's even wilder is that you can
+// coerce an enum to a union! But don't get too excited, that
+// only works when the union type is one of those weird zero-bit
+// types like void!
+//
+// Tagged unions, as with most ideas in computer science, have a
+// long history going back to the 1960s. However, they're only
+// recently becoming mainstream, particularly in system-level
+// programming languages. You might have also seen them called
+// "variants", "sum types", or even "enums"!
+

@@ -1,0 +1,46 @@
+exercise 45
+//
+// Sometimes you know that a variable might hold a value or
+// it might not. Zig has a neat way of expressing this idea
+// called Optionals. An optional type just has a '?' like this:
+//
+//     var foo: ?u32 = 10;
+//
+// Now foo can store a u32 integer OR null (a value storing
+// the cosmic horror of a value NOT EXISTING!)
+//
+//     foo = null;
+//
+//     if (foo == null) beginScreaming();
+//
+// Before we can use the optional value as the non-null type
+// (a u32 integer in this case), we need to guarantee that it
+// isn't null. One way to do this is to THREATEN IT with the
+// "orelse" statement.
+//
+//     var bar = foo orelse 2;
+//
+// Here, bar will either equal the u32 integer value stored in
+// foo, or it will equal 2 if foo was null.
+//
+exercise 46
+//
+// Now that we have optional types, we can apply them to structs.
+// The last time we checked in with our elephants, we had to link
+// all three of them together in a "circle" so that the last tail
+// linked to the first elephant. This is because we had NO CONCEPT
+// of a tail that didn't point to another elephant!
+//
+// We also introduce the handy `.?` shortcut:
+//
+//     const foo = bar.?;
+//
+// is the same as
+//
+//     const foo = bar orelse unreachable;
+//
+// Check out where we use this shortcut below to change control flow
+// based on if an optional value exists.
+//
+// Now let's make those elephant tails optional!
+//
